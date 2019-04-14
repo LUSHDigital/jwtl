@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"log"
 )
 
 func UnsafelyGenerateKeyPair() (private []byte, public []byte, err error) {
@@ -21,7 +22,7 @@ func UnsafelyGenerateKeyPair() (private []byte, public []byte, err error) {
 	}
 	b, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	publicBlock := &pem.Block{
 		Type:  "PUBLIC KEY",

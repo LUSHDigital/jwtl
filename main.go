@@ -26,7 +26,7 @@ func init() {
 
 	current, err := user.Current()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	destination = filepath.Join(current.HomeDir, folder)
@@ -36,7 +36,7 @@ func init() {
 	_, err = os.Stat(destination)
 	if _, ok := err.(*os.PathError); ok {
 		if err := os.MkdirAll(filepath.Join(current.HomeDir, folder), os.ModePerm); err != nil {
-			log.Fatal(err)
+			log.Fatalln(err)
 		}
 	}
 
@@ -71,17 +71,17 @@ func handleArgs() {
 func generateKeys() {
 	private, public, err := rsautil.UnsafelyGenerateKeyPair()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	if err := ioutil.WriteFile(privatePath, private, 0755); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	if err := ioutil.WriteFile(publicPath, public, 0755); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	const keypath = "JWT_PUBLIC_KEY_PATH"
 	if err := os.Setenv(keypath, publicPath); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	msg := `Generated keypair:
 private: %s
@@ -106,16 +106,16 @@ func generateJwt(grants []string) {
 
 	private, err := ioutil.ReadFile(privatePath)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	public, err := ioutil.ReadFile(publicPath)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	token, err := tokens.NewJWT(string(private), string(public), "dev")
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	tok, err := token.GenerateToken(&tokens.Consumer{
 		ID:        1,
@@ -125,7 +125,7 @@ func generateJwt(grants []string) {
 		Grants:    grants,
 	})
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	fmt.Println(tok.Value)
 }
