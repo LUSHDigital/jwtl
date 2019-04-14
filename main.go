@@ -26,21 +26,26 @@ func init() {
 
 	current, err := user.Current()
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed getting current user: %v", err)
 	}
 
 	destination = filepath.Join(current.HomeDir, folder)
-	privatePath = filepath.Join(current.HomeDir, folder, private)
-	publicPath = filepath.Join(current.HomeDir, folder, public)
+	privatePath = filepath.Join(destination, private)
+	publicPath = filepath.Join(destination, public)
 
 	_, err = os.Stat(destination)
-	if _, ok := err.(*os.PathError); ok {
-		if err := os.MkdirAll(filepath.Join(current.HomeDir, folder), os.ModePerm); err != nil {
-			log.Fatalln(err)
+	if err != nil {
+		switch err.(type) {
+		case *os.PathError:
+			if err := os.MkdirAll(filepath.Join(current.HomeDir, folder), os.ModePerm); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	}
-
 }
+
+func main() { handleArgs() }
+
 func handleArgs() {
 	flag.Parse()
 	switch flag.Arg(0) {
@@ -71,18 +76,15 @@ func handleArgs() {
 func generateKeys() {
 	private, public, err := rsautil.UnsafelyGenerateKeyPair()
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed generating keys: %v", err)
 	}
 	if err := ioutil.WriteFile(privatePath, private, 0755); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed writing private key: %v", err)
 	}
 	if err := ioutil.WriteFile(publicPath, public, 0755); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed writing public key: %v", err)
 	}
 	const keypath = "JWT_PUBLIC_KEY_PATH"
-	if err := os.Setenv(keypath, publicPath); err != nil {
-		log.Fatalln(err)
-	}
 	msg := `Generated keypair:
 private: %s
 public: %s
@@ -95,27 +97,30 @@ export %s=%s
 }
 
 func generateJwt(grants []string) {
-	_, err := os.Stat(privatePath)
-	if err != nil {
-		log.Fatalln("missing private key, please generate keys first")
+	checkPath := func(path, name string) {
+		if _, err := os.Stat(path); err != nil {
+			switch err.(type) {
+			case *os.PathError:
+				log.Fatalf("missing %s, please generate keys first\n", name)
+			}
+		}
 	}
-	_, err = os.Stat(publicPath)
-	if err != nil {
-		log.Fatalln("missing public key, please generate keys first")
-	}
+
+	checkPath(privatePath, "private key")
+	checkPath(publicPath, "public key")
 
 	private, err := ioutil.ReadFile(privatePath)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed reading private key: %v", err)
 	}
 	public, err := ioutil.ReadFile(publicPath)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed reading public key: %v", err)
 	}
 
 	token, err := tokens.NewJWT(string(private), string(public), "dev")
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed creating jwt: %v", err)
 	}
 	tok, err := token.GenerateToken(&tokens.Consumer{
 		ID:        1,
@@ -125,11 +130,7 @@ func generateJwt(grants []string) {
 		Grants:    grants,
 	})
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed generating token: %v", err)
 	}
 	fmt.Println(tok.Value)
-}
-
-func main() {
-	handleArgs()
 }
