@@ -18,18 +18,24 @@ var (
 )
 
 func init() {
+	const (
+		folder  = ".lushdev"
+		private = "private_unencrypted.pem"
+		public  = "public.pem"
+	)
+
 	current, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
 
-	destination = filepath.Join(current.HomeDir, ".lushdev")
-	privatePath = filepath.Join(current.HomeDir, ".lushdev", "private_unencrypted.pem")
-	publicPath = filepath.Join(current.HomeDir, ".lushdev", "public.pem")
+	destination = filepath.Join(current.HomeDir, folder)
+	privatePath = filepath.Join(current.HomeDir, folder, private)
+	publicPath = filepath.Join(current.HomeDir, folder, public)
 
 	_, err = os.Stat(destination)
 	if _, ok := err.(*os.PathError); ok {
-		if err := os.MkdirAll(filepath.Join(current.HomeDir, ".lushdev"), os.ModePerm); err != nil {
+		if err := os.MkdirAll(filepath.Join(current.HomeDir, folder), os.ModePerm); err != nil {
 			log.Fatal(err)
 		}
 	}
