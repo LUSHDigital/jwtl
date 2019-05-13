@@ -1,18 +1,37 @@
-# JWTDev
+# jwtl (JSON Web Token Command Line tool)
+This is a tool to help you during development. It relies on the fact that we can predict the source for RSA public keys, thanks to the [LUSHDigital/core/workers/keybroker](github.com/LUSHDigital/core/workers/keybroker) package from [LUSHDigital/core](github.com/LUSHDigital/core).
 
-This is a tool to help you during development.
-It relies on the fact that we can predict the source for RSA public keys, thanks
-to the `keybroker` package from `core`.
+In order to use this tool effectively, one should first generate keys, then export the required environment variable (this will be provided to you). The broker knows where to look after that. The tokens generated via this tool are valid for 24 hours.
+
+## Install
 
 ```
-usage:
-[generate]:
-	[keys]: generates a new rsa key pair under ~/.lushdev
-	[jwt]: generates a new jwt, using the generated rsa key pair
+$ go install github.com/LUSHDigital/jwtl
 ```
 
-In order to use this tool effectively, one should first generate keys, then export the required environment variable (this will be provided to you).
+## Usage
 
-The broker knows where to look after that.
-
-The tokens generated via this tool are valid for 24 hours.
+```
+Usage of jwtl:
+   jwtl new
+	Generates a JWT token based on an RSA key pair
+   jwtl setup
+	Generates a new RSA key pair
+Flags:
+  -firstname string
+    	First name of the consumer (default "John")
+  -grants string
+    	Grants of the consumer as a comma separated list (default "read,write")
+  -lang string
+    	Language of the consumer (default "en")
+  -lastname string
+    	Last name of the consumer (default "Doe")
+  -name string
+    	Name of the keys to use or generate in the location (default "jwt")
+  -path string
+    	Path on disk to the location to use or generate the keys (default "/Users/philipvieira")
+  -roles string
+    	Roles of the consumer as a comma separated list (default "guest")
+  -uid int
+    	ID of the consumer (default 1)
+```
