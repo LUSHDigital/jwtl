@@ -9,6 +9,10 @@ In order to use this tool effectively, one should first generate keys, then expo
 $ go install github.com/LUSHDigital/jwtl
 ```
 
+```
+$ jwtl -path ~/.secrets -name jwt setup
+```
+
 ## Usage
 
 ```
@@ -29,7 +33,7 @@ Flags:
   -name string
     	Name of the keys to use or generate in the location (default "jwt")
   -path string
-    	Path on disk to the location to use or generate the keys (default "/Users/philipvieira")
+    	Path on disk to the location to use or generate the keys (default "/Users/me")
   -roles string
     	Roles of the consumer as a comma separated list (default "guest")
   -uid int
