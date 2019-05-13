@@ -12,7 +12,7 @@ import (
 
 	"github.com/LUSHDigital/core/auth"
 
-	"jwtdev/unsafersa"
+	"jwtl/unsafersa"
 )
 
 var (
