@@ -163,7 +163,7 @@ func generate(consumer *auth.Consumer) {
 	}
 	token, err := issuer.Issue(consumer)
 	if err != nil {
-		log.Fatalf("cannot create token issuer: %v", err)
+		log.Fatalf("cannot issue token: %v", err)
 	}
 	fmt.Println(token)
 }
