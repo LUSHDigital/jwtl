@@ -9,8 +9,8 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"jwtdev/rsautil"
 	"jwtdev/tokens"
+	"jwtdev/unsafersa"
 )
 
 var (
@@ -74,7 +74,7 @@ func handleArgs() {
 }
 
 func generateKeys() {
-	private, public, err := rsautil.UnsafelyGenerateKeyPair()
+	private, public, err := unsafersa.GenerateUnsafeKeyPair()
 	if err != nil {
 		log.Fatalf("failed generating keys: %v", err)
 	}
