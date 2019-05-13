@@ -1,4 +1,4 @@
-module jwtdev
+module jwtl
 
 go 1.12
 
