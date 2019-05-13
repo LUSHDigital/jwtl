@@ -1,5 +1,5 @@
 # jwtl (JSON Web Token Command Line tool)
-This is a tool to help you during development. It relies on the fact that we can predict the source for RSA public keys, thanks to the [LUSHDigital/core/workers/keybroker](github.com/LUSHDigital/core/workers/keybroker) package from [LUSHDigital/core](github.com/LUSHDigital/core).
+This is a tool to help you during development. It relies on the fact that we can predict the source for RSA public keys, thanks to the [LUSHDigital/core/workers/keybroker](github.com/LUSHDigital/core/tree/master/workers/keybroker) package from [LUSHDigital/core](github.com/LUSHDigital/core).
 
 In order to use this tool effectively, one should first generate keys, then export the required environment variable (this will be provided to you). The broker knows where to look after that. The tokens generated via this tool are valid for 24 hours.
 
