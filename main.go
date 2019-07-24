@@ -12,8 +12,7 @@ import (
 	"time"
 
 	"github.com/LUSHDigital/core/auth"
-
-	"jwtl/unsafersa"
+	"github.com/LUSHDigital/jwtl/unsafersa"
 )
 
 var (

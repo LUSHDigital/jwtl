@@ -1,4 +1,4 @@
-module jwtl
+module github.com/LUSHDigital/jwtl
 
 go 1.12
 
