@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/LUSHDigital/core/auth"
 
@@ -16,21 +17,29 @@ import (
 )
 
 var (
-	privatePath string
-	publicPath  string
-	jwtKeysPath string
-	jwtKeysName string
+	privatePath    string
+	publicPath     string
+	jwtKeysPath    string
+	jwtKeysName    string
+	jwtValidFrom   string
+	jwtValidPeriod = "60m"
+
+	now           func() time.Time
+	validDuration time.Duration
 
 	userID        = int64(1)
 	userFirstName = "John"
 	userLastName  = "Doe"
+	userRoles     = "guest"
+	userGrants    = "read,write"
+	userNeeds     = "nothing"
 	lang          = "en"
-
-	userRoles  = "guest"
-	userGrants = "read,write"
 )
 
 const (
+	// IssuerName represents the name of the JWT issuer.
+	IssuerName = "Developer Command Line"
+
 	// ReadOnly file mode for key pairs.
 	ReadOnly = 0755
 
@@ -45,6 +54,12 @@ const (
 
 	// JWTPrivateKeyEnv represents the environment variable for the JWT private key as in the LUSHDigital/core library.
 	JWTPrivateKeyEnv = "JWT_PRIVATE_KEY_PATH"
+
+	// JWTValidPeriodEnv represents the environment variable for the duration the JWT token is valid for.
+	JWTValidPeriodEnv = "JWT_VALID_PERIOD"
+
+	// JWTValidFrom represents an environment variable for what timestamp to use for the current time.
+	JWTValidFrom = "JWT_VALID_FROM"
 
 	// PrivateKeySuffix is the name suffix for a private key for a given key pair name.
 	PrivateKeySuffix = "private_unencrypted"
@@ -74,18 +89,42 @@ func main() {
 		jwtKeysName = DefaultName
 	}
 
+	// Derive the jwt validity duration from the environment if possible.
+	if s := os.Getenv(JWTValidPeriodEnv); s != "" {
+		jwtValidPeriod = s
+	}
+
+	jwtValidFrom = time.Now().Format(time.RFC3339)
+	if s := os.Getenv(JWTValidFrom); s != "" {
+		jwtValidFrom = s
+	}
+
 	flag.StringVar(&jwtKeysPath, "path", jwtKeysPath, "Path on disk to the location to use or generate the keys")
 	flag.StringVar(&jwtKeysName, "name", jwtKeysName, "Name of the keys to use or generate in the location")
-
+	flag.StringVar(&jwtValidPeriod, "valid_period", jwtValidPeriod, "Duration the generated keys are valid")
+	flag.StringVar(&jwtValidFrom, "valid_from", jwtValidFrom, "Timestamp used to determine the time when a token is valid")
 	flag.Int64Var(&userID, "uid", userID, "ID of the consumer")
 	flag.StringVar(&userFirstName, "firstname", userFirstName, "First name of the consumer")
 	flag.StringVar(&userLastName, "lastname", userLastName, "Last name of the consumer")
-	flag.StringVar(&lang, "lang", lang, "Language of the consumer")
-
 	flag.StringVar(&userGrants, "grants", userGrants, "Grants of the consumer as a comma separated list")
 	flag.StringVar(&userRoles, "roles", userRoles, "Roles of the consumer as a comma separated list")
+	flag.StringVar(&userNeeds, "needs", userNeeds, "Needs of the consumer as a comma separated list")
+
+	flag.StringVar(&lang, "lang", lang, "Language of the consumer")
 
 	flag.Parse()
+
+	d, err := time.ParseDuration(jwtValidPeriod)
+	if err != nil {
+		log.Fatalf("cannot parse token valid period duration: %v", err)
+	}
+	validDuration = d
+
+	t, err := time.Parse(time.RFC3339, jwtValidFrom)
+	if err != nil {
+		log.Fatalf("cannot parse token valid from timestamp: %v", err)
+	}
+	now = func() time.Time { return t }
 
 	mkdir(jwtKeysPath)
 
@@ -95,11 +134,17 @@ func main() {
 
 	grants := strings.Split(userGrants, ",")
 	roles := strings.Split(userRoles, ",")
+	needs := strings.Split(userNeeds, ",")
 
 	switch flag.Arg(0) {
 	case "setup":
 		setup()
 	case "new":
+		config := auth.IssuerConfig{
+			Name:        IssuerName,
+			ValidPeriod: validDuration,
+			TimeFunc:    time.Now,
+		}
 		consumer := &auth.Consumer{
 			ID:        1,
 			FirstName: "John",
@@ -107,8 +152,9 @@ func main() {
 			Language:  "en",
 			Grants:    grants,
 			Roles:     roles,
+			Needs:     needs,
 		}
-		generate(consumer)
+		generate(config, consumer)
 	case "help":
 		fallthrough
 	default:
@@ -124,6 +170,16 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+const exportMessage = `Please export this into your environment to reuse the configuration:
+
+export %s=%s
+export %s=%s
+export %s=%s
+export %s=%s
+export %s=%s
+
+`
+
 func setup() {
 	private, public, err := unsafersa.GenerateUnsafeKeyPair()
 	if err != nil {
@@ -137,27 +193,22 @@ func setup() {
 	}
 
 	fmt.Printf("Generated key pair\n  %s\n  %s\n\n", privatePath, publicPath)
-	const exportMessage = `Please export this into your environment to reuse the configuration:
-
-export %s=%s
-export %s=%s
-export %s=%s
-export %s=%s
-
-`
-	fmt.Printf(exportMessage, JWTKeysPathEnv, jwtKeysPath, JWTKeysNameEnv, jwtKeysName, JWTPublicKeyEnv, publicPath, JWTPrivateKeyEnv, privatePath)
+	fmt.Printf(exportMessage,
+		JWTKeysPathEnv, jwtKeysPath,
+		JWTKeysNameEnv, jwtKeysName,
+		JWTPublicKeyEnv, publicPath,
+		JWTPrivateKeyEnv, privatePath,
+		JWTValidPeriodEnv, validDuration.String(),
+	)
 }
 
-func generate(consumer *auth.Consumer) {
+func generate(config auth.IssuerConfig, consumer *auth.Consumer) {
 	check(privatePath)
 	private, err := ioutil.ReadFile(privatePath)
 	if err != nil {
 		log.Fatalf("failed reading private key: %v", err)
 	}
-	cfg := auth.IssuerConfig{
-		Name: "Developer Command Line",
-	}
-	issuer, err := auth.NewIssuerFromPrivateKeyPEM(cfg, private)
+	issuer, err := auth.NewIssuerFromPrivateKeyPEM(config, private)
 	if err != nil {
 		log.Fatalf("cannot create token issuer: %v", err)
 	}
