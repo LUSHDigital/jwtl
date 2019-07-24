@@ -32,10 +32,18 @@ Flags:
     	Last name of the consumer (default "Doe")
   -name string
     	Name of the keys to use or generate in the location (default "jwt")
+  -needs string
+    	Needs of the consumer as a comma separated list (default "nothing")
   -path string
-    	Path on disk to the location to use or generate the keys (default "/Users/me")
+    	Path on disk to the location to use or generate the keys (default "/Users/me/.secrets")
   -roles string
     	Roles of the consumer as a comma separated list (default "guest")
   -uid int
     	ID of the consumer (default 1)
+  -uuid string
+    	UUID of the consumer (default "67e89fbc-41eb-4090-b67b-f22b80ced238")
+  -valid_from string
+    	Timestamp used to determine the time when a token is valid (default "2019-07-24T11:48:17+02:00")
+  -valid_period string
+    	Duration the generated keys are valid (default "60m")
 ```
