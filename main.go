@@ -27,6 +27,7 @@ var (
 	validDuration time.Duration
 
 	userID        = int64(1)
+	userUUID      = "67e89fbc-41eb-4090-b67b-f22b80ced238"
 	userFirstName = "John"
 	userLastName  = "Doe"
 	userRoles     = "guest"
@@ -103,6 +104,7 @@ func main() {
 	flag.StringVar(&jwtValidPeriod, "valid_period", jwtValidPeriod, "Duration the generated keys are valid")
 	flag.StringVar(&jwtValidFrom, "valid_from", jwtValidFrom, "Timestamp used to determine the time when a token is valid")
 	flag.Int64Var(&userID, "uid", userID, "ID of the consumer")
+	flag.StringVar(&userUUID, "uuid", userUUID, "UUID of the consumer")
 	flag.StringVar(&userFirstName, "firstname", userFirstName, "First name of the consumer")
 	flag.StringVar(&userLastName, "lastname", userLastName, "Last name of the consumer")
 	flag.StringVar(&userGrants, "grants", userGrants, "Grants of the consumer as a comma separated list")
@@ -146,6 +148,7 @@ func main() {
 		}
 		consumer := &auth.Consumer{
 			ID:        1,
+			UUID:      userUUID,
 			FirstName: "John",
 			LastName:  "Doe",
 			Language:  "en",
