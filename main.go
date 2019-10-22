@@ -147,7 +147,7 @@ func main() {
 			TimeFunc:    time.Now,
 		}
 		consumer := &auth.Consumer{
-			ID:        1,
+			ID:        userID,
 			UUID:      userUUID,
 			FirstName: "John",
 			LastName:  "Doe",
