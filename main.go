@@ -218,7 +218,7 @@ func generate(config auth.IssuerConfig, consumer *auth.Consumer) {
 	if err != nil {
 		log.Fatalf("cannot issue token: %v", err)
 	}
-	fmt.Println(token)
+	fmt.Print(token)
 }
 
 func mkdir(path string) {
